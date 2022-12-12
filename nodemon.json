@@ -1,0 +1,10 @@
+{
+  "env": {
+    "MYSQL_USER"     : "root",
+    "MYSQL_PASSWORD" : "",
+    "MYSQL_DATABASE" : "sty_people",
+    "MYSQL_HOST"     : "localhost",
+    "MYSQL_PORT"     : 3306,     
+    "JWT_KEY"        : "@LG10sty7"
+  }
+}

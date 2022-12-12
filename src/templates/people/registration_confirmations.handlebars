@@ -1,0 +1,38 @@
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Setydeias</title>
+    <style>
+      h2 { color: rgb(14, 13, 13) }
+      p { color: rgba(237, 237, 238, 0.158) }
+      div.top {
+        margin-top: 1em;
+        margin-bottom: 1em;
+        background-color: rgb(45, 45, 136);
+        height: 150px;
+        width: 60%;
+      }
+      div.footer {
+        margin-top: 1em;
+        margin-bottom: 1em;
+        background-color: rgba(206, 206, 206, 0.932);
+        height: 90px;
+        width: 60%;
+      }
+    </style>
+
+  </head>
+  <body>
+    <div class="top"></div>
+    <h2>Olá, {{people}}!</h2>
+    <div>O seu cadastro foi realizado com sucesso.</div><br />
+    <p>Dados de acesso:</p>
+    <div><b>Usuário</b>: {{user}}</div><br />
+    <div><b>Senha</b>: {{password}}</div><br />
+    <div><b style="color: brown;">Obs: </b> Clique no botão <b>Confirmar</b> para validar o seu acesso e gerenciamento<br/> dos dados cadastrados.</div>
+    <button>Confirmar</button>
+    <div class="footer"></div>
+  </body>
+</html>
