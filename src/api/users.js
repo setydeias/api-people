@@ -7,5 +7,4 @@ const UsersController = require('../controllers/users.controller');
 router.post('/cadastro', UsersController.postUser);
 router.get('/consultar/todos', UsersController.getUsers);
 
-
 module.exports = router;

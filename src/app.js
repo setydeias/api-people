@@ -4,6 +4,8 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 
 const routerUser = require('./api/users');
+const routerPeople = require('./api/people');
+
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: false})); //apenas dados simples
@@ -27,6 +29,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/usuario', routerUser);
+app.use('/api/people', routerPeople);
 
 app.use((req, res, next) =>{
     const erro = new Error('404 - Rota não encontrado');
