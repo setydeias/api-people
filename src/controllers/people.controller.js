@@ -18,7 +18,7 @@ exports.postPeople = async (req, res, next) => {
     await insertAdress(connection, req, rows[0].id_people);
 
     for (let i = 0; i < req.body.contacts.length; i++) {
-      await insertContact(connection, req, rows[0].id_people, i);
+      await insertContact(connection, req.body.contacts[i], rows[0].id_people, i);
     }
 
     const temporary_password = parseInt(Math.random() * 999999);
@@ -45,23 +45,98 @@ exports.postPeople = async (req, res, next) => {
   }
 }
 
+exports.patchPeople = async (req, res, next) => { 
+ 
+  const connection = await mysql.createConnection(dataconection);
+
+  await connection.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');   
+  await connection.beginTransaction();
+
+  try {
+
+    await updatePeople(connection, req);
+    await updateAdress(connection, req);
+
+    for (let i = 0; i < req.body.contacts.length; i++) {
+      await updateContact(connection, req.body.contacts[i]);
+    }
+
+    const response = {
+      message: 'Alterações realizado com sucesso!',
+      pessoaAlterada: {
+        id_people: req.body.id_people,
+        name: req.body.name,
+      }
+    }
+
+    await connection.commit();
+    return res.status(202).send(response);
+
+  } catch (err) {
+    connection.rollback();
+    console.error(`Não foi possível alterar: ${err.message}`, err);
+    return res.status(304).send(err);
+  }
+}
+
 const insertPeople = (connection, req) => {
   connection.execute(`
       INSERT INTO people(
-        id_status, id_document_type, document, usual_name, birth_date, sexo, id_treatment, date_registration
+        id_status, 
+        id_document_type, 
+        document, 
+        name,
+        usual_name, 
+        birth_date, 
+        sexo, 
+        id_treatment, 
+        date_registration, 
+        last_change
       )
       VALUES(
-        ?,?,?,?,?,?,?,?
-      );
+        ?,?,?,?,?,?,?,?,?,?
+      );  
     `,[
         req.body.id_status, 
         req.body.id_document_type, 
         req.body.document, 
+        req.body.name,
         req.body.usual_name, 
         req.body.birth_date, 
         req.body.sexo, 
-        req.body.id_treatment, 
-        req.body.date_registration
+        req.body.id_treatment,
+        req.body.date_registration,
+        req.body.last_change
+    ]);   
+}
+
+const updatePeople = (connection, req) => {
+  connection.execute(`
+        UPDATE 
+          people 
+        SET
+          id_status =?, 
+          id_document_type =?, 
+          document =?,
+          name =?, 
+          usual_name =?, 
+          birth_date =?, 
+          sexo =?, 
+          id_treatment =?,
+          last_change =?
+        WHERE 
+          id_people =?;
+    `,[
+        req.body.id_status, 
+        req.body.id_document_type, 
+        req.body.document, 
+        req.body.name,
+        req.body.usual_name, 
+        req.body.birth_date, 
+        req.body.sexo, 
+        req.body.id_treatment,
+        req.body.last_change, 
+        req.body.id_people
     ]);   
 }
 
@@ -93,7 +168,36 @@ const insertAdress = (connection, req, id_people) => {
     ]);    
 }
 
-const insertContact = (connection, req, id_people, i) => {
+const updateAdress = (connection, req) => {
+  connection.execute(`
+      UPDATE 
+        adress
+      SET 
+        id_adress_type=?, 
+        adress=?, 
+        address_number=?, 
+        city=?, 
+        uf=?, 
+        address_complement=?, 
+        district=?, 
+        cep=?
+      WHERE
+        id_people=?
+
+    `, [
+      req.body.adress.id_adress_type,
+      req.body.adress.adress,
+      req.body.adress.address_number,
+      req.body.adress.city,
+      req.body.adress.uf,
+      req.body.adress.address_complement,
+      req.body.adress.district,
+      req.body.adress.cep,
+      req.body.id_people
+    ]);    
+}
+
+const insertContact = (connection, contact, id_people, i) => {
   connection.execute(`
         INSERT INTO contact(
           id_people,
@@ -107,11 +211,40 @@ const insertContact = (connection, req, id_people, i) => {
         );
       `,[      
         id_people,
-        req.body.contacts[i].id_contact_type,
-        req.body.contacts[i].contact,
-        req.body.contacts[i].whatsapp,
-        req.body.contacts[i].main
-      ]);       
+        contact.id_contact_type,
+        contact.contact,
+        contact.whatsapp,
+        contact.main
+      ]
+  );       
+}
+
+const updateContact = (connection, contact) => {
+    /*console.log(`
+      id_contact: ${contact.whatsapp}
+      id_contact_type: ${contact.id_contact_type}
+      contact: ${contact.contact}
+      whatsapp: ${contact.whatsapp}
+      main: ${contact.main}
+    `)*/
+    connection.execute(`
+      UPDATE 
+        contact
+      SET
+        id_contact_type=?,
+        contact=?,
+        whatsapp=?,
+        main=?
+      WHERE
+        id_contact=?;
+      `,[      
+          contact.id_contact_type,
+          contact.contact,
+          contact.whatsapp,
+          contact.main,
+          contact.id_contact,
+        ]
+    );
 }
 
 const insertUser = (connection, req, id_people, temporary_password) => {
