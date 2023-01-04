@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/usuario', routerUser);
-app.use('/api/people', routerPeople);
+app.use('/api/pessoa', routerPeople);
 
 app.use((req, res, next) =>{
     const erro = new Error('404 - Rota não encontrado');

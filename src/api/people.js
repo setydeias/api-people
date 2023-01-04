@@ -4,7 +4,9 @@ const router = express.Router();
 
 const PeopleController = require('../controllers/people.controller');
 
-router.post('/cadastro', PeopleController.postPeople);
-router.patch('/alteracao', PeopleController.patchPeople);
+router.post('/cadastrar', PeopleController.postPeople);
+router.patch('/aditar/', PeopleController.patchPeople);
+router.patch('/contato/editar', PeopleController.patchContact);
+router.delete('/contato/delete/:id', PeopleController.deleteContact);
 
 module.exports = router;

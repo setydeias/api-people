@@ -1,11 +1,12 @@
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
+const mysqlPromise = require('mysql2/promise');
 const dataconection = require('../config/database/mysql2').connection;
 const bcrypt = require('bcrypt');
 const { any } = require('bluebird');
 
 exports.postPeople = async (req, res, next) => { 
  
-  const connection = await mysql.createConnection(dataconection);
+  const connection = await mysqlPromise.createConnection(dataconection);
 
   await connection.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');   
   await connection.beginTransaction();
@@ -41,13 +42,15 @@ exports.postPeople = async (req, res, next) => {
   } catch (err) {
     connection.rollback();
     console.error(`Não foi possível cadastrar: ${err.message}`, err);
-    return res.status(304).send(err);
+    return res.status(304).send({
+      message: 'Não foi possível cadastrar'
+    });
   }
 }
 
 exports.patchPeople = async (req, res, next) => { 
  
-  const connection = await mysql.createConnection(dataconection);
+ const connection = await mysqlPromise.createConnection(dataconection);
 
   await connection.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');   
   await connection.beginTransaction();
@@ -77,6 +80,74 @@ exports.patchPeople = async (req, res, next) => {
     console.error(`Não foi possível alterar: ${err.message}`, err);
     return res.status(304).send(err);
   }
+}
+
+exports.patchContact = (req, res, next) => {
+
+  const connection = mysql.createConnection(dataconection);
+
+  connection.execute(`
+    UPDATE 
+      contact
+    SET
+      id_contact_type=?,
+      contact=?,
+      whatsapp=?,
+      main=?
+    WHERE
+      id_contact=?;
+    `,[      
+      req.body.id_contact_type,
+      req.body.contact,
+      req.body.whatsapp,
+      req.body.main,
+      req.body.id_contact,
+    ], (err, row) => {
+
+      if (err) { return res.status(500).send({ error: err })}
+      
+      const response = {
+        message: 'Alterações realizado com sucesso!',
+        contatoAlterada: {
+          id_contact: req.body.id_contact,
+          contato: req.body.contact,
+        }
+      }
+      return res.status(200).send(response);
+    }
+  );
+}
+
+exports.deleteContact = (req, res, next) => {
+
+  const connection = mysql.createConnection(dataconection);
+
+  connection.execute(`
+    DELETE FROM 
+      contact
+    WHERE
+      id_contact=?;
+    `,[      
+      req.params.id,
+    ], (err, row) => {
+
+      if (err) { return res.status(500).send({ error: err })}
+      
+      const response = {
+        message: 'Contao Excluído com sucesso.',
+        request: {
+          tipo: 'POST',
+          descricao: 'Insere um Contato',
+          url: 'https://localhost:3001/api/pessoa/cadastrar', //Deverá ser substituido por uma variável de ambiente.
+          body: {
+            Descrição: 'String',
+            id: 'int'
+          }
+        }
+      } 
+      return res.status(202).send(response);
+    }
+  );
 }
 
 const insertPeople = (connection, req) => {
@@ -220,31 +291,24 @@ const insertContact = (connection, contact, id_people, i) => {
 }
 
 const updateContact = (connection, contact) => {
-    /*console.log(`
-      id_contact: ${contact.whatsapp}
-      id_contact_type: ${contact.id_contact_type}
-      contact: ${contact.contact}
-      whatsapp: ${contact.whatsapp}
-      main: ${contact.main}
-    `)*/
-    connection.execute(`
-      UPDATE 
-        contact
-      SET
-        id_contact_type=?,
-        contact=?,
-        whatsapp=?,
-        main=?
-      WHERE
-        id_contact=?;
-      `,[      
-          contact.id_contact_type,
-          contact.contact,
-          contact.whatsapp,
-          contact.main,
-          contact.id_contact,
-        ]
-    );
+  connection.execute(`
+    UPDATE 
+      contact
+    SET
+      id_contact_type=?,
+      contact=?,
+      whatsapp=?,
+      main=?
+    WHERE
+      id_contact=?;
+    `,[      
+        contact.id_contact_type,
+        contact.contact,
+        contact.whatsapp,
+        contact.main,
+        contact.id_contact,
+      ]
+  );
 }
 
 const insertUser = (connection, req, id_people, temporary_password) => {
