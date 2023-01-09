@@ -1,4 +1,5 @@
-const mysql  = require('../config/database/mysql').pool;
+const mysql  = require('mysql2');
+const dataconection = require('../config/database/mysql2').connection;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -74,4 +75,68 @@ exports.getUsers =  (req, res, next) =>{
             }
         )
     });
+}
+
+exports.loginUser = (req, res, next) => {
+
+    const connection = mysql.createConnection(dataconection);
+
+    connection.execute(`
+        SELECT 
+            people.id_people as id_people,
+            people.id_status as id_status,
+            people.document as document,
+            people.name as name, 
+            user.id_user as id_user,
+            user.password_user as password_user
+        FROM
+            people
+        INNER JOIN
+            user
+        ON
+            people.id_people = user.id_people
+        WHERE	
+        people.document = ?;`, 
+        [req.body.document], (error, results, fields) => {
+            if(error) { return res.status(500).send({ error: error })}
+            if(results.length < 1) {
+                return res.status(204).send({ message: 'Documento não cadastrado.' })
+            } 
+
+            bcrypt.compare(req.body.password_user,  results[0].password_user, (err, result) => {
+                
+                if(err) {
+                  return res.status(401).send({ message: 'Falha na autenticação.' })
+                }
+                
+                if(result) {
+                    const token = jwt.sign({
+                      id_user: results[0].id_user,
+                      name: results[0].name
+                    },
+                    process.env.JWT_KEY,
+                    {
+                      expiresIn: "1h"
+                    });
+                    
+                    return res.status(200).send({                         
+			            people: {
+			            	id_people: results[0].id_people,
+                            id_status: results[0].id_status,
+                            document: results[0].document,
+                            name: results[0].name,
+                            id_user: results[0].id_user,
+                            password_user: results[0].password_user
+			            },
+			            message:  'Autenticado com sucesso.',
+                        access_token: token,
+                        token_type: "Bearer",
+                        expires_in: 3600,
+                    });
+                }
+
+                return  res.status(401).send({ message: 'Falha na autenticação' })
+          });
+        }
+    );
 }

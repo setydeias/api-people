@@ -23,8 +23,8 @@ exports.postPeople = async (req, res, next) => {
     }
 
     const temporary_password = parseInt(Math.random() * 999999);
-    
-    await insertUser(connection, req, rows[0].id_people, temporary_password);
+
+    await insertUser(connection, req, rows[0].id_people, temporary_password.toString());
 
     const response = {
       message: 'Cadastro realizado com sucesso!',
@@ -32,7 +32,7 @@ exports.postPeople = async (req, res, next) => {
         id_people: rows[0].id_people,
         name: req.body.name,
         description_user: req.body.document,
-        password_user: temporary_password,
+        password_user: temporary_password.toString(),
       }
     }
 
@@ -312,7 +312,7 @@ const updateContact = (connection, contact) => {
 }
 
 const insertUser = (connection, req, id_people, temporary_password) => {
-  bcrypt.hash( toString(temporary_password), 10, (errBcrypt, hash) => {
+  bcrypt.hash(temporary_password, 10, (errBcrypt, hash) => {
     if(errBcrypt) { 
       connection.rollback();
       return res.status(500).send({ error: errBcrypt })
