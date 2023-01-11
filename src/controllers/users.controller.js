@@ -77,6 +77,44 @@ exports.getUsers =  (req, res, next) =>{
     });
 }
 
+exports.getUserForDescription = (req, res, next) => {
+   
+    mysql.getConnection((error, conn) => {
+        if(error) { return res.status(500).send({ error: error })}
+        conn.query(
+            `
+				SELECT 
+					id_user,
+					id_people,
+					description_user 
+				FROM 
+					user
+				WHERE
+					description_user =?
+			`,
+            [req.body.description_user],
+            (error, result, fields) => {
+                conn.release();
+                if(error) { return res.status(500).send({ error: error })}
+                
+                if (result.length == 0) {
+                     return res.status(404).send({
+                        message: 'Documento não cadastrado.'
+                     })
+                }
+                const response = {
+                    usuario: {                        
+                        id_user: result[0].id_user,
+						id_people: result[0].id_people,
+                        description_user: result[0].description_user
+                    }
+                }
+                return res.status(200).send(response);
+            }
+        ) 
+    });
+}
+
 exports.loginUser = (req, res, next) => {
 
     const connection = mysql.createConnection(dataconection);
