@@ -79,11 +79,10 @@ exports.getUsers =  (req, res, next) =>{
 
 exports.getUserForDescription = (req, res, next) => {
    
-    mysql.getConnection((error, conn) => {
-        if(error) { return res.status(500).send({ error: error })}
-        conn.query(
-            `
-				SELECT 
+   const connection = mysql.createConnection(dataconection);
+    connection.execute(
+        `
+			SELECT 
 					id_user,
 					id_people,
 					description_user 
@@ -94,12 +93,11 @@ exports.getUserForDescription = (req, res, next) => {
 			`,
             [req.body.description_user],
             (error, result, fields) => {
-                conn.release();
                 if(error) { return res.status(500).send({ error: error })}
                 
                 if (result.length == 0) {
                      return res.status(404).send({
-                        message: 'Documento não cadastrado.'
+                        message: 'Usuário não cadastrado.'
                      })
                 }
                 const response = {
@@ -111,8 +109,7 @@ exports.getUserForDescription = (req, res, next) => {
                 }
                 return res.status(200).send(response);
             }
-        ) 
-    });
+    );
 }
 
 exports.loginUser = (req, res, next) => {
